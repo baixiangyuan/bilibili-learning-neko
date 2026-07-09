@@ -241,6 +241,28 @@ bash start.sh
 
 本项目仅供学习参考。使用本项目请遵守 B站用户协议，若因使用本项目产生任何后果，本人概不负责。
 
+## 🔌 作为 N.E.K.O 宿主插件运行
+
+本仓库同时是 [N.E.K.O](https://github.com/Project-N-E-K-O/N.E.K.O) 的智能体插件（含 `plugin.toml` 与 `__init__.py` 插件入口）。插件随宿主启动后可在插件面板手动启动，会自动拉起 Flask 管理面板（默认 `http://127.0.0.1:8080`，由 `web_panel.py` 以独立子进程运行，UI 通过 iframe 嵌入）。
+
+### ⚠️ vendor/ 依赖与死锁坑（重要）
+
+宿主框架的依赖校验**只扫描 `vendor/` 目录内的发行版**，不会回退宿主 `.venv`，因此插件的全部 Python 依赖都必须装进 `vendor/`。
+
+但 `vendor/` 会被宿主在**父进程**注入到 `sys.path[0]`。若其中包含与宿主 `.venv` 版本冲突的包（尤其是 `pydantic` / `pydantic_core` / `anyio` / `jinja2`），会导致 `multiprocessing.Manager()` 子进程在 spawn 时解析到错误版本而**卡死宿主事件循环**。
+
+- ✅ `vendor/` 应含：插件运行所需的全部依赖（`bilibili-api-python` / `httpx` / `openai` / `Pillow` / Flask 全套 / `imageio-ffmpeg` 等）。
+- ❌ `vendor/` **不得含**：`pydantic` / `pydantic_core` / `anyio` / `jinja2`（改由宿主 `.venv` 兜底，避免冲突死锁）。
+- Flask 面板依赖 `jinja2`，直接用宿主 `.venv` 自带的版本即可，无需塞进 `vendor/`。
+- 推荐的 vendor 安装方式（不带传递依赖、不引入冲突包）：
+
+```bash
+uv pip install --no-deps --target vendor \
+  bilibili-api-python httpx colorama qrcode qrcode-terminal requests \
+  openai Pillow Flask Flask-Cors Werkzeug itsdangerous blinker click markupsafe
+# 注意：上面刻意不含 jinja2 / pydantic / anyio
+```
+
 ## 📄 License
 
 MIT © XingYe contributors
