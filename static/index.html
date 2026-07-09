@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>B站AI学习机器人 · Flask 面板</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0f1115; color: #e6e6e6;
+                 font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    #loading { position: fixed; inset: 0; display: flex; flex-direction: column;
+               align-items: center; justify-content: center; gap: 12px; z-index: 10;
+               text-align: center; padding: 0 20px; }
+    .spin { width: 34px; height: 34px; border: 3px solid #2a2f3a; border-top-color: #fb7299;
+            border-radius: 50%; animation: sp 0.9s linear infinite; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    #panel { display: none; width: 100%; height: 100%; border: 0; }
+    a { color: #fb7299; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="spin"></div>
+    <div id="msg">正在连接原项目 Flask 面板…</div>
+  </div>
+  <iframe id="panel"></iframe>
+
+  <script>
+    // 原项目 Flask 管理面板（web_panel.py）随插件启动，固定跑在 8080
+    const PANEL = "http://localhost:8080";
+    const PID = "bilibili_learning";
+    const BASE = window.location.origin;
+    const loading = document.getElementById("loading");
+    const msg = document.getElementById("msg");
+    const panel = document.getElementById("panel");
+
+    // 插件若处于停止状态，先拉起它（on_startup 会自动启动 Flask 面板）
+    async function ensureStarted() {
+      try {
+        await fetch(`${BASE}/plugin/${PID}/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+      } catch (_) { /* 最佳努力，忽略错误 */ }
+    }
+
+    // 轮询面板端口，就绪后嵌入 iframe
+    async function waitThenShow() {
+      for (let i = 0; i < 45; i++) {
+        try {
+          await fetch(PANEL + "/api/info", { mode: "no-cors" });
+          panel.src = PANEL;
+          panel.style.display = "block";
+          loading.style.display = "none";
+          return;
+        } catch (_) {
+          // 中途尝试拉起插件（仅一次），再继续等待面板就绪
+          if (i === 4) ensureStarted();
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
+      msg.innerHTML = "❌ Flask 面板未就绪（约 45s 无响应）。<br>" +
+        "请确认插件已在管理器启动、端口 8080 未被占用，或查看插件日志。<br>" +
+        "你也可以手动打开：<a href='" + PANEL + "' target='_blank'>" + PANEL + "</a>";
+    }
+
+    waitThenShow();
+  </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+[plugin]
+id = "bilibili_learning"
+name = "B站AI学习机器人"
+description = "自动刷B站推荐流、智能理解视频、评论互动、知识沉淀与自我进化"
+short_description = "让AI接管你的B站账号，自动学习成长"
+keywords = ["bilibili", "b站", "学习", "ai", "机器人", "视频", "知识"]
+passive = true
+version = "3.1.0"
+entry = "plugin.plugins.bilibili_learning:BilibiliLearningPlugin"
+
+[plugin.author]
+name = "bilibili_learning_bot Team"
+
+[plugin.i18n]
+default_locale = "zh-CN"
+locales_dir = "i18n"
+
+[plugin.sdk]
+recommended = ">=0.1.0,<0.2.0"
+supported = ">=0.1.0,<0.3.0"
+
+[plugin.ui]
+enabled = true
+
+[[plugin.ui.panel]]
+id = "main"
+title = "B站学习机器人"
+entry = "static/index.html"
+context = "dashboard"
+permissions = ["state:read", "action:call"]
+
+[plugin_runtime]
+enabled = true
+auto_start = false
+
+[plugin.store]
+enabled = true
+
+[bilibili_learning]
+# 业务配置段：对应插件 Settings 的 toml_section="bilibili_learning"
+bilibili_cookie = ""
+openai_api_key = ""
+openai_base_url = "https://api.openai.com/v1"
+model = "gpt-4o-mini"
+learning_interval = 30
+comment_enabled = true
+private_msg_enabled = true
+interest_tags = []
+auto_coin = false
+auto_fav = false
+safety_review = true

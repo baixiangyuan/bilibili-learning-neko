@@ -1,0 +1,20 @@
+# Python bytecode cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local runtime data (optional, keep if you want persistence in repo)
+# data/
+
+# 运行态敏感/临时文件（禁止入库）
+# Data/ 含 .web_secret_key（Flask 面板密钥）、.onstart_marker、panel.log 等运行态数据
+Data/
+*.log
+.web_secret_key
+.onstart_marker
+# 注意：vendor/ 故意不忽略（随仓库分发，开箱即用）
